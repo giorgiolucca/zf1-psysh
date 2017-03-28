@@ -1,0 +1,71 @@
+#!/usr/bin/env php
+
+<?php
+
+use Psy\Shell;
+use Psy\Configuration;
+
+$autoloadFiles = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../../autoload.php'
+];
+
+foreach ($autoloadFiles as $autoloadFile) {
+    if (file_exists($autoloadFile)) {
+        require_once $autoloadFile;
+    }
+}
+
+defined('APPLICATION_PATH')
+    || define('APPLICATION_PATH', sprintf('%s/%s', getcwd(), 'application'));
+
+defined('APPLICATION_ENV')
+    || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'development'));
+
+set_include_path(implode(PATH_SEPARATOR, array(
+    sprintf('%s/%s', getcwd(), 'library'),
+    get_include_path(),
+)));
+
+$configDirPath = sprintf('%s/%s', APPLICATION_PATH, 'configs');
+$configFiles = [];
+
+if (is_dir($configDirPath)) {
+    $configDir = new \RecursiveDirectoryIterator($configDirPath);
+    $iterator = new \RecursiveIteratorIterator($configDir);
+
+    foreach ($iterator as $fileInfo) {
+        if (! $fileInfo->isFile() || $fileInfo->getExtension() !== 'ini') {
+            continue;
+        }
+        array_push($configFiles, $fileInfo->getPathName());
+    }
+}
+$application = new Zend_Application(
+    APPLICATION_ENV,
+    [
+        'config' => $configFiles
+    ]
+);
+
+\Zend_Session::$_unitTestEnabled = true;
+
+$config = new Configuration([
+    'startupMessage' => sprintf('<info>%s</info>', 'Psysh to ZF1 v0.1.0'),
+]);
+
+$shell = new Shell($config);
+
+$application->bootstrap();
+
+$bootstrap = $application->getBootstrap();
+$config = $bootstrap->getOptions();
+$registry = \Zend_Registry::getInstance();
+
+$shell->setScopeVariables([
+    'bootstrap' => $bootstrap,
+    'config' => $config,
+    'registry' => $registry
+]);
+
+$shell->run();
