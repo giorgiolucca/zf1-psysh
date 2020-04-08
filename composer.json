@@ -10,7 +10,7 @@
     ],
     "require": {
         "psy/psysh": "@stable",
-        "zendframework/zendframework1": "1.12.*",
+        "zendframework/zendframework1": "~1.12",
         "php": ">=5.3.0"
     },
     "require-dev": {

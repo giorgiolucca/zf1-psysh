@@ -52,6 +52,7 @@ $application = new Zend_Application(
 
 $config = new Configuration([
     'startupMessage' => sprintf('<info>%s</info>', 'Psysh to ZF1 v0.1.0'),
+    'updateCheck' => 'never',
 ]);
 
 $shell = new Shell($config);
